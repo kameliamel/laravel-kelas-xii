@@ -59,7 +59,7 @@
                       <tbody>
                         @foreach ($perans as $peran)
                         <tr>
-                          <td class="w3-list-info">{{ $peran->cast_id }}</td>
+                          <td class="w3-list-info">{{ $peran->cast->name ?? '-' }}</td>
                           <td class="w3-list-info">{{ $peran->actor }}</td>
                         </tr>
                         @endforeach
@@ -114,24 +114,59 @@
           </div>
         </div>
         <div class="clearfix"> </div>
-        <div class="all-comments">
+        <div class="all-comments" id="comments">
           <div class="all-comments-info">
             <a href="#">Comments</a>
-            <div class="agile-info-wthree-box">
-              <form>
-                <input type="text" placeholder="Name" required="">			           					   
-                <input type="text" placeholder="Email" required="">
-                <input type="text" placeholder="Phone" required="">
-                <textarea placeholder="Message" required=""></textarea>
-                <input type="submit" value="SEND">
-                <div class="clearfix"> </div>
-              </form>
-            </div>
+
+            @if (session('success_comment'))
+              <div class="alert alert-success" style="margin-top: 1em;">
+                {{ session('success_comment') }}
+              </div>
+            @endif
+
+            @guest
+              <div class="alert alert-warning" style="margin-top: 1em;">
+                Silakan login terlebih dahulu untuk memberikan komentar.
+                <a href="#" data-toggle="modal" data-target="#myModal" class="btn btn-warning btn-sm" style="margin-left: 10px; color: #fff; background: #ff8d1b; font-weight: bold; border: none;">
+                  Login Sekarang
+                </a>
+              </div>
+            @else
+              @if ($errors->has('comment') || $errors->has('rating'))
+                <div class="alert alert-danger" style="margin-top: 1em;">
+                  <ul style="margin: 0; padding-left: 20px;">
+                    @foreach ($errors->all() as $error)
+                      <li>{{ $error }}</li>
+                    @endforeach
+                  </ul>
+                </div>
+              @endif
+
+              <div class="agile-info-wthree-box">
+                <form action="{{ route('comments.store', $film->id) }}" method="POST">
+                  @csrf
+                  <div style="margin-bottom: 12px;">
+                    <label for="rating" style="display: block; font-weight: normal; margin-bottom: 5px; color: #212121; font-size: 13px;">Rating Film:</label>
+                    <select name="rating" id="rating" class="form-control" style="width: 220px; border: 1px solid #D4D3D3;" required>
+                      <option value="">-- Pilih Rating (1-5) --</option>
+                      <option value="5" {{ old('rating') == '5' ? 'selected' : '' }}>5 Bintang (Sangat Bagus)</option>
+                      <option value="4" {{ old('rating') == '4' ? 'selected' : '' }}>4 Bintang (Bagus)</option>
+                      <option value="3" {{ old('rating') == '3' ? 'selected' : '' }}>3 Bintang (Cukup)</option>
+                      <option value="2" {{ old('rating') == '2' ? 'selected' : '' }}>2 Bintang (Kurang)</option>
+                      <option value="1" {{ old('rating') == '1' ? 'selected' : '' }}>1 Bintang (Buruk)</option>
+                    </select>
+                  </div>
+                  <textarea name="comment" placeholder="Tulis komentar atau kritik Anda..." maxlength="500" required>{{ old('comment') }}</textarea>
+                  <input type="submit" value="SEND">
+                  <div class="clearfix"> </div>
+                </form>
+              </div>
+            @endguest
           </div>
           <div class="media-grids">
             @foreach ($comments as $comment)
               <div class="media">
-                <h5>{{ $comment->user_id }}</h5>
+                <h5>{{ $comment->user->name ?? 'Pengguna' }}</h5>
                 <div class="media-left">
                   <a href="#">
                     <img src="{{ asset('storage/images/user.jpg') }}" title="One movies" alt=" " />
